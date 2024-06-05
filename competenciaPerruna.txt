@@ -1,0 +1,85 @@
+%%%%%%%%%%%%%%%%%%%%%%%% Hechos %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Los hechos establecen relaciones directas entre objetos y sus propiedades, como en tu caso, donde defines 
+% características de perros, gatos y humanos, así como estándares raciales para algunas razas de perros. 
+% Las reglas y consultas en Prolog luego pueden utilizar estos hechos para inferir nuevas relaciones o propiedades.
+
+perro(lucia, beagle(kongo, 36, 15), [jugueton, carinioso, tonto]).
+perro(lucia, cocker(susi, 13, 38, hembra), [inteligente, bueno]).
+perro(gise, cocker(polo, 20, 41, macho), [malo, inteligente]).
+perro(homero,ayudanteDeSanta, [carinioso,tonto, vago]).
+gato(senioraDeLosGatos, flufy).
+gato(senioraDeLosGatos, michifuz).
+humano(homero, [tonto, vago]).
+humano(lucia, [carinioso, inteligente]).
+humano(gise, [inteligente, malo]).
+humano(ralph, [tonto, carinioso]).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%% Hechos %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Establecen los estándares de altura y peso para diferentes razas de perros.
+beagle(_, Altura, _):- 
+	Altura >= 33, 
+	Altura =< 40.
+cocker(_, Peso, Altura, hembra):- 
+	Peso >= 13, 
+	Peso =< 15, 
+	Altura >= 38, 
+	Altura =< 39.
+cocker(_, Peso, Altura, macho):- 
+	Peso >= 13, 
+	Peso =< 15, 
+	Altura >= 39, 
+	Altura =< 41.
+% La altura no se considera en los perros sin raza
+
+%%%%%%%%%%%%%%%%%%%%%%%% Predicados  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Define si un perro cumple con los estándares raciales establecidos.
+estandarRacial(beagle(_, Altura, _)):- beagle(_, Altura, _).
+
+estandarRacial(cocker(_, Peso, Altura, Genero)):- cocker(_, Peso, Altura, Genero).
+
+% Permite obtener las características de un perro, gato o humano.
+caracteristica(Animal, Caracteristica):- 
+    (   perro(_, Animal, Caracteristicas); 
+        gato(_, Animal);
+        humano(Animal, Caracteristicas)
+    ), 
+    member(Caracteristica, Caracteristicas).
+	
+% caracteristica(beagle(kongo, 20, 15), Caracteristica).
+
+% caracteristica(homero, Caracteristica).
+
+% problema con el gato  devuelve true cuando en realidad no tiene caracteristicas 
+% caracteristica(flufy, Caracteristica).	para resulverlo se lo saca de la caracteristica anterior y se realiza
+% este nuevo predicado
+% caracteristica(Animal, _):- 
+%    gato(_, Animal), 
+%    !, 
+%    fail.	
+	
+
+
+% Determina si un perro puede estar enfermo, considerando que los perros de Lucía no se enferman ni aquellos que 
+% cumplen con el estándar racial.
+puedeEstarEnfermo(Perro):- 
+    perro(_, Perro, _), 
+    (not(estandarRacial(Perro)); perro(lucia, Perro, _)).
+
+
+% Predicados Indica si un perro se parece a su dueño en función de las características.
+sePareceASuDuenio(Perro, Duenio):-
+    perro(Duenio, Perro, _),
+    humano(Duenio, CaracteristicasDuenio),
+    forall(member(Caracteristica, CaracteristicasDuenio), caracteristica(Perro, Caracteristica)).
+
+% Determina si un humano tiene al menos 2 perros que cumplen con el estándar racial.
+puedeGanar(Duenio) :-
+    findall(Perro, (perro(Duenio, Perro, _), estandarRacial(Perro)), Perros),
+    length(Perros, Cantidad),
+    Cantidad >= 2.
+
+
+
